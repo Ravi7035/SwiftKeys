@@ -1,39 +1,33 @@
 import { create } from "zustand";
 
 export const useGameStore = create((set) => ({
-  // --- STATE VARIABLES ---
   gameMode: "time",
   gameDuration: 30,
   difficulty: "none",
   savedDifficulty: "none",
   deathWPM: 60,
-
+  LiveWPM: 0, 
   OnlineUsers: 0,
-
   GameState: "Idle",
   OpponentProgress: 0,
   text: '',
   roomId: null,
-
   typedChars: [],
-
   countdown: 30,
   isRunning: false,
   isTyping: false,
   isGameover: false,
   gameOverReason: null,
-
   TotalTypedChars: 0,
   CorrectChars: 0,
-
   WPM_History: [],
   ghostIndex: 0,
-
-  // --- ACTIONS ---
+  Winner:null,
 
   setGameState: (status) => set({ GameState: status }),
 
-  // ✅ FIXED
+  setLiveWPM: (wpm) => set({ LiveWPM: wpm }),
+
   setGameData: (data) => set({
     GameState: "playing",
     text: data.text,
@@ -52,7 +46,7 @@ export const useGameStore = create((set) => ({
     typedChars: typeof updater === "function" ? updater(state.typedChars) : updater
   })),
 
-  setOnlineUsers:(data)=>{
+  setOnlineUsers: (data) => {
     set({ OnlineUsers: data.TotalNumberOnline })
   },
 
@@ -105,6 +99,13 @@ export const useGameStore = create((set) => ({
       ghostIndex: typeof val === 'function' ? val(state.ghostIndex) : val
     })),
 
+    setWinner:(data)=>
+    {
+      set({Winner:data});
+    }
+    ,
+
+  
   resetGame: () =>
     set((state) => ({
       GameState: "Idle",
@@ -120,6 +121,7 @@ export const useGameStore = create((set) => ({
       TotalTypedChars: 0,
       CorrectChars: 0,
       WPM_History: [],
-      ghostIndex: 0
+      ghostIndex: 0,
+      LiveWPM: 0 
     })),
 }));

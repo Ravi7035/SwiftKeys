@@ -2,9 +2,39 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import toast from "react-hot-toast";
+import  userAuthStore  from "../store/AuthenticationStore";
 
 const RegisterForm = () => {
+
+  const {signup}=userAuthStore();
+  const [FormData,setFormData]=useState({
+    username:"",
+    email:"",
+    password:""
+  });
+  const validateForm=()=>
+    {
+      if(!FormData.username){
+          return   toast.error("username required")
+      }
+      if(!FormData.email){
+          return   toast.error("email required!")
+      }
+      if(!FormData.password){
+        return   toast.error("password required!")
+    }
+
+      return true
+    }
+  const handleSubmit=async(e)=>{
+    const success=validateForm();
+    if(!success) return;
+    e.preventDefault();
+    signup(FormData);
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -20,21 +50,35 @@ const RegisterForm = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+        <form className="login-form" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <Label htmlFor="register-name">Full Name</Label>
+            <Label htmlFor="register-name">Username</Label>
             <Input
               id="register-name"
               type="text"
-              placeholder="John Doe"
+              placeholder="username"
+              value={FormData.username}
+              onChange={(e)=>
+              {
+                setFormData({...FormData,username:e.target.value})
+              }
+            }
               className="transition-all focus:ring-2 focus:ring-primary/20"
             />
           </div>
+         
           <div className="space-y-2">
             <Label htmlFor="register-email">Email</Label>
             <Input
               id="register-email"
               type="email"
               placeholder="you@example.com"
+              value={FormData.email}
+              onChange={(e)=>
+                {
+                  setFormData({...FormData,email:e.target.value})
+                }
+              }
               className="transition-all focus:ring-2 focus:ring-primary/20"
             />
           </div>
@@ -44,12 +88,19 @@ const RegisterForm = () => {
               id="register-password"
               type="password"
               placeholder="••••••••"
+              value={FormData.password}
+              onChange={(e)=>
+                {
+                  setFormData({...FormData,password:e.target.value})
+                }
+              }
               className="transition-all focus:ring-2 focus:ring-primary/20"
             />
           </div>
-          <Button className="w-full mt-6 shadow-md hover:shadow-lg transition-all cursor-pointer">
+          <Button type="submit" className="w-full mt-6 shadow-md hover:shadow-lg transition-all cursor-pointer">
             Register
           </Button>
+          </form>
         </CardContent>
       </Card>
     </motion.div>

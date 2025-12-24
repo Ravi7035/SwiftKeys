@@ -8,25 +8,27 @@ const SentenceGenerator = () => {
     isGameover,
     setCorrectChars,
     setTotalTypedChars,
-    CorrectChars,
-    countdown,
-    gameDuration,
-    addWPMEntry,
-    isRunning,
-    startgame,
-    stopgame,
-    setCountDown,
-    difficulty,
-    deathWPM,
-    ghostIndex,
-    setGhostIndex,
-    
-    // --- MULTIPLAYER IMPORTS ---
-    typedChars,       
-    setTypedChars,    
-    GameState,        
-    text,             
-  } = useGameStore();
+      CorrectChars,
+      countdown,
+      gameDuration,
+      addWPMEntry,
+      isRunning,
+      startgame,
+      stopgame,
+      setCountDown,
+      difficulty,
+      deathWPM,
+      ghostIndex,
+      setGhostIndex,
+      setLiveWPM ,
+      LiveWPM,
+      
+      // --- MULTIPLAYER IMPORTS ---
+      typedChars,       
+      setTypedChars,    
+      GameState,        
+      text,             
+    } = useGameStore();
 
   const [isFocused, setIsFocused] = useState(true);
   const [randomSentence, setRandomSentence] = useState("");
@@ -116,7 +118,7 @@ const SentenceGenerator = () => {
       }
 
       if (e.code === "Space") {
-        e.preventDefault();
+        e.preventDefault(); 
 
         // Check if Space is the correct character
         const isCorrect = expectedChar === " ";
@@ -172,7 +174,11 @@ const SentenceGenerator = () => {
       const currentCorrect = correctCharsRef.current;
       if (localElapsed > 0) {
         const wpm = (currentCorrect / 5) / (localElapsed / 60);
-        addWPMEntry(Math.round(wpm));
+        const roundedWPM = Math.max(0, Math.round(wpm));
+
+        addWPMEntry(roundedWPM);
+        setLiveWPM(roundedWPM);
+        console.log(roundedWPM);
       }
     }, 1000);
 

@@ -38,12 +38,11 @@ const LineGraph = () => {
         data: WPM_History,
         borderColor: '#e2b714',
 
-        // ⭐ FIXED GRADIENT ⭐
         backgroundColor: (context) => {
           const chart = context.chart;
           const { ctx, chartArea } = chart;
 
-          // Chart area not ready yet → prevents invisible gradient
+        
           if (!chartArea) return null;
 
           const gradient = ctx.createLinearGradient(
@@ -120,7 +119,7 @@ const LineGraph = () => {
   };
 
   return (
-    // ⭐ Guaranteed height — does NOT change UI, just ensures chart renders
+   
     <div className="w-full h-full min-h-[250px] p-4">
       <Line data={data} options={options} />
     </div>

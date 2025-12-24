@@ -6,6 +6,7 @@ import Navbar from "./components/Navbar.jsx";
 import HomePage from "./pages/Homepage.jsx";
 import MultiplayerMode from "./components/MultiplayerMode.jsx"
 import { useGameStore } from "./store/Gamestore.js";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   
@@ -24,12 +25,26 @@ function App() {
     <div className="h-screen flex flex-col bg-black text-white">
       <Navbar onPracticeClick={handlePracticeClick} />
 
-
       <Routes>
         <Route path="/" element={<HomePage refreshKey={refreshKey} />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/multiplayer" element={<MultiplayerMode/>}/>
+
       </Routes>
+      <Toaster
+        toastOptions={{
+          style: {
+            fontSize: "14px",
+            padding: "8px 12px",
+            borderRadius: "8px",
+          },
+        }}
+        containerStyle={{
+          top: "35%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+        }}
+      />
     </div>
   );
 }
