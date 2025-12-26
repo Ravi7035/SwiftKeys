@@ -13,7 +13,8 @@ const Gameover = () => {
     resetGame,
     difficulty
   } = useGameStore();
-  
+
+ 
   if (!isGameover) return null;
   
   const elapsedSeconds = gameDuration - (countdown > 0 ? countdown : 0);
@@ -24,7 +25,18 @@ const Gameover = () => {
   const accuracy = TotalTypedChars > 0 ? (CorrectChars / TotalTypedChars) * 100 : 0;
   const incorrect = TotalTypedChars - CorrectChars;
 
-  if (gameOverReason === 'death_fail') {
+  useEffect(()=>
+    {
+      if(isGameover && (gameOverReason!=="death_fail" || gameOverReason!="ghost_death" && elapsedSeconds > 0))
+      {
+        
+  
+      }
+      
+    },[isGameover,gameOverReason])
+    
+
+  if (gameOverReason === 'death_fail' && elapsedSeconds==0) {
     return (
         <div className="w-full min-h-screen flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 py-10 px-8">
             <div className="flex flex-col items-center gap-8 bg-[#2c2e31]/30 p-12 rounded-2xl border border-[#ca4754]/20 shadow-2xl backdrop-blur-sm">
@@ -39,7 +51,7 @@ const Gameover = () => {
     );
   }
 
-  if (gameOverReason === 'ghost_death') {
+  if (gameOverReason === 'ghost_death' && elapsedSeconds==0) {
     return (
         <div className="w-full min-h-screen flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 py-10 px-8">
             <div className="flex flex-col items-center gap-8 bg-[#2c2e31]/30 p-12 rounded-2xl border border-[#ca4754]/20 shadow-2xl backdrop-blur-sm">
@@ -66,7 +78,7 @@ const Gameover = () => {
           <div className="flex flex-col justify-center gap-6">
             <div><p className="text-[#646669] text-xl font-bold">wpm</p><p className="text-[#e2b714] text-[4rem] font-bold">{netWpm.toFixed(0)}</p></div>
             <div><p className="text-[#646669] text-xl font-bold">acc</p><p className="text-[#e2b714] text-[4rem] font-bold">{accuracy.toFixed(0)}%</p></div>
-          </div>
+          </div>    
           <div className="w-full h-[220px] bg-[#2c2e31]/20 rounded-lg border border-[#2c2e31] p-3 relative">
              <div className="w-full h-full"><LineGraph /></div>
           </div>

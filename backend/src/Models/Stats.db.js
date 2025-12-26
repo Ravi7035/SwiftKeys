@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-
 const StatsSchema=mongoose.Schema(
     {
       userId:
@@ -37,4 +36,6 @@ const StatsSchema=mongoose.Schema(
               date: { type: Date, default: Date.now }
             }
           ]
-})
+});
+const Stats=mongoose.model("Stats",StatsSchema);
+export default Stats;

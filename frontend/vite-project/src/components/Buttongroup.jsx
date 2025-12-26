@@ -1,11 +1,13 @@
-import { Keyboard, Settings, Swords, Trophy, Bell, User } from "lucide-react";
+import { Keyboard, Settings, Swords, Trophy, User } from "lucide-react";
 import { useState } from "react";
+import ProfileDropDown from "./ProfileDropDown";
 
 const ButtonGroup = ({ onPracticeClick }) => {
   const [activeItem, setActiveItem] = useState("practice");
+  const [showProfile, setShowProfile] = useState(false); // State to toggle dropdown
+
   const navItems = [
     { id: "practice", icon: Keyboard, label: "Start Typing" },
-  
     { id: "battle", icon: Swords, label: "Battle" },
     { id: "leaderboard", icon: Trophy, label: "Leaderboard" },
   ];
@@ -21,12 +23,14 @@ const ButtonGroup = ({ onPracticeClick }) => {
       onPracticeClick();
     }
   };
+
   const tooltipStyle = "absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-xl border border-neutral-700/50 z-50";
+
   return (
-    <div className="relative flex items-center justify-between w-full py-4">
+    <div className="relative flex items-center justify-end w-full py-4 px-8">
       
-      {/* 1. CENTER GROUP */}
-      <div className="absolute left-1/2 -traslate-x-1/2 flex items-center gap-16">
+      {/* 1. CENTER GROUP (Absolute Centering) */}
+      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-12">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeItem === item.id;
@@ -35,49 +39,39 @@ const ButtonGroup = ({ onPracticeClick }) => {
             <button
               key={item.id}
               onClick={() => handleNavClick(item.id)}
-              aria-label={item.label}
-              className={`
-                group relative
-                transition-all duration-300 ease-out 
-                ${isActive ? "text-yellow-500" : "text-neutral-600 hover:text-neutral-400"}
-              `}
+              className={`group relative transition-all duration-300 ${
+                isActive ? "text-yellow-500" : "text-neutral-600 hover:text-neutral-400"
+              }`}
             >
-  
-              <Icon
-                className="h-6 w-6 cursor-pointer transform transition-transform duration-300 group-hover:scale-110"
-                strokeWidth={isActive ? 2.5 : 2}
-              />
-              
-            
-              <span className={tooltipStyle}>
-                {item.label}
-              </span>
+              <Icon className="h-6 w-6 cursor-pointer transform transition-transform group-hover:scale-110" />
+              <span className={tooltipStyle}>{item.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* 2. SPACER */}
-      <div className="flex-grow"></div>
-
-      {/* 3. RIGHT GROUP */}
-      <div className="flex items-center gap-8 pr-8">
+      {/* 2. RIGHT GROUP */}
+      <div className="flex items-center gap-6">
         {rightItems.map((item) => {
           const Icon = item.icon;
           return (
-            <button
-              key={item.id}
-              className="group relative text-neutral-600 hover:text-neutral-300 transition-colors duration-200"
-              aria-label={item.label}
-            >
-              <Icon 
-                className="h-6 w-6 cursor-pointer transform transition-transform duration-300 group-hover:scale-110" 
-                strokeWidth={2} 
-              />
-              <span className={tooltipStyle}>
-                {item.label}
-              </span>
-            </button>
+            <div key={item.id} className="relative ">
+              <button
+                className="group cursor-pointer relative text-neutral-600 hover:text-neutral-300 transition-colors"
+                onClick={() => {
+                  if (item.id === "profile") setShowProfile(!showProfile);
+                }}
+              >
+                <Icon className="h-6 w-6 transform transition-transform group-hover:scale-110" />
+                <span className={tooltipStyle}>{item.label}</span>
+              </button>
+
+              {item.id === "profile" && showProfile && (
+                <div className="absolute right-0 mt-2 top-full z-[100]">
+                  <ProfileDropDown />
+                </div>
+              )}
+            </div>
           );
         })}
       </div>

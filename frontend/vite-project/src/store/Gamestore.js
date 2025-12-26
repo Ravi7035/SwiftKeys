@@ -80,7 +80,7 @@ export const useGameStore = create((set) => ({
     });
   },
 
-  stopgame: (reason = 'time') => {
+  stopgame: (reason) => {
     set((state) => ({
       isRunning: false,
       isGameover: true,
