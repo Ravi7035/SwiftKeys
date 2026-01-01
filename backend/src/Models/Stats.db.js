@@ -1,11 +1,13 @@
 import mongoose from "mongoose";
-const StatsSchema=mongoose.Schema(
-    {
-      userId:
-      {
-        type:ObjectId,
-        ref:User
-      },
+
+const StatsSchema = mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true
+    },
       bestWpm:  
       { 
         type:Number,
@@ -24,18 +26,12 @@ const StatsSchema=mongoose.Schema(
         required:true,
         default:0
       }  ,
-      totalMatches: { type: Number, default: 0 },
-        Wins:
+      TotalTests: { type: Number, default: 0 },
+        TotalWins:
         {
             type:Number,
-            required:true
-        },
-        history: [
-            {
-              wpm: Number,
-              date: { type: Date, default: Date.now }
-            }
-          ]
+            default:0
+        }
 });
 const Stats=mongoose.model("Stats",StatsSchema);
 export default Stats;

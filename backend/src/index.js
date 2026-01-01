@@ -5,18 +5,24 @@ import mongoose from "mongoose";
 import express from "express";
 const Port=process.env.PORT;
 import authroutes from "./Routes/authentication.routes.js";
+import statsroutes from "./Routes/stats.routes.js";
+import leaderboardRoutes from "./Routes/leaderboard.routes.js";
+
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { protectRoute } from "./middlewares/auth.middleware.js";
 
 app.use(cors({
-  origin: "http://localhost:5173", // Your Vite frontend URL
+  origin: "http://localhost:5173",//Vite frontend URL
   credentials: true,               // Allows cookies/headers to pass
 }));
 
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/auth", authroutes);
+app.use("/api/auth", authroutes);
+app.use("/api/Stats",statsroutes);
+app.use("/api/leaderboard", leaderboardRoutes);
 
 connectdb()
   .then(() => {

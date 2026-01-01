@@ -13,12 +13,8 @@ const userAuthStore = create((set,get) => ({
      set({isCheckingAuth:true})
     try {
       const res = await axiosInstance.get("/auth/check");
-      console.log(res.data);
-      set({ userauth: res.data }); 
-      if(res.data)
-        {
-          get().connectSocket();
-        } 
+      console.log(res);
+      set({ userauth: res.data });
     } catch (err) {
       console.log(err.response?.data?.message ||  "Auth check failed");
       set({ userauth: null });
@@ -73,7 +69,6 @@ const userAuthStore = create((set,get) => ({
         await axiosInstance.post("/auth/logout",{ withCredentials: true });
         set({userauth:null});
         toast.success("logout successfull");
-        get().disconnectSocket();
     }
     catch(error)
     {

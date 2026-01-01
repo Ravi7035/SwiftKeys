@@ -1,13 +1,19 @@
 import React from 'react';
 import { BarChart3, LogOut, User } from 'lucide-react';
 import userAuthStore from '../store/AuthenticationStore';
+import { useNavigate } from "react-router-dom";
 
 const ProfileDropDown = () => {
     const {logout} =userAuthStore();
-  
+    const navigate=useNavigate();
+     const stats=()=>
+     { 
+      navigate("/stats");
+     }
+
   const menuItems = [
-    { label: 'Stats', icon: <BarChart3 size={18} />, action: () => {stats()} },
-    { label: 'Logout', icon: <LogOut size={18} />, action: () => {logout()} },
+    { label: 'Stats', icon: <BarChart3 size={18} />, action: stats },
+    { label: 'Logout', icon: <LogOut size={18} />, action: logout },
   ];
 
   return (
@@ -17,7 +23,9 @@ const ProfileDropDown = () => {
         {menuItems.map((item, index) => (
           <button
             key={index}
-            onClick={item.action}
+            onClick={
+              item.action
+            }
             className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm text-zinc-400 hover:text-yellow-500 hover:bg-yellow-500/5 rounded-md transition-all duration-200 group"
           >
             <span className="group-hover:scale-110 transition-transform">

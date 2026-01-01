@@ -1,10 +1,25 @@
 import { Keyboard, Settings, Swords, Trophy, User } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProfileDropDown from "./ProfileDropDown";
+import userAuthStore from "../store/AuthenticationStore.js";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const ButtonGroup = ({ onPracticeClick }) => {
   const [activeItem, setActiveItem] = useState("practice");
-  const [showProfile, setShowProfile] = useState(false); // State to toggle dropdown
+  const [showProfile, setShowProfile] = useState(false);
+  const {userauth} = userAuthStore();
+  const navigate = useNavigate();
+
+  //check for authentication
+
+
+  // Reset profile dropdown when user logs out
+  useEffect(() => {
+    if (!userauth) {
+      setShowProfile(false);
+    } 
+  }, [userauth]);
 
   const navItems = [
     { id: "practice", icon: Keyboard, label: "Start Typing" },
@@ -21,6 +36,18 @@ const ButtonGroup = ({ onPracticeClick }) => {
     setActiveItem(itemId);
     if (itemId === "practice" && onPracticeClick) {
       onPracticeClick();
+      navigate("/");
+    }
+    else if (itemId === "battle") {
+      if (userauth) {
+        navigate("/multiplayer");
+      } else {
+        toast.error("sign in first");
+        navigate("/auth");
+      }
+    }
+    else if (itemId === "leaderboard") {
+      navigate("/leaderboard");
     }
   };
 
@@ -28,8 +55,8 @@ const ButtonGroup = ({ onPracticeClick }) => {
 
   return (
     <div className="relative flex items-center justify-end w-full py-4 px-8">
-      
-      {/* 1. CENTER GROUP (Absolute Centering) */}
+
+      {/*left group*/}
       <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-12">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -59,13 +86,17 @@ const ButtonGroup = ({ onPracticeClick }) => {
               <button
                 className="group cursor-pointer relative text-neutral-600 hover:text-neutral-300 transition-colors"
                 onClick={() => {
-                  if (item.id === "profile") setShowProfile(!showProfile);
+                  if(item.id === "profile" && userauth) 
+                    {setShowProfile(!showProfile)}
+                  else{
+                    navigate("/auth");
+                  } 
                 }}
               >
                 <Icon className="h-6 w-6 transform transition-transform group-hover:scale-110" />
                 <span className={tooltipStyle}>{item.label}</span>
               </button>
-
+ 
               {item.id === "profile" && showProfile && (
                 <div className="absolute right-0 mt-2 top-full z-[100]">
                   <ProfileDropDown />

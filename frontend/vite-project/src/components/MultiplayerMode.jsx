@@ -3,6 +3,7 @@ import { Loader2, User, Users, Trophy, Clock } from "lucide-react";
 import socket from "../socket.js";
 import { useGameStore } from "../store/Gamestore.js";
 import SentenceGenerator from "./SentenceGenerator.jsx";
+import { useStatsStore } from "../store/Stats.store.js";
 
 const MultiplayerMode = () => {
   const {
@@ -15,16 +16,19 @@ const MultiplayerMode = () => {
     text,
     setOnlineUsers,
     OnlineUsers,
-    LiveWPM,  
-    setLiveWPM, // <--- Import this to force reset WPM
+    LiveWPM,
+    setLiveWPM,
     countdown,
     gameDuration,
     startgame,
     setCountDown,
     stopgame,
     Winner,
-    setWinner
+    setWinner,
+    CorrectChars,
+    TotalTypedChars
   } = useGameStore();
+  const{updateStats}=useStatsStore();
 
   const [selectedMode, setSelectedMode] = useState("1v1");
   const [opponents, setOpponents] = useState({});
@@ -80,7 +84,6 @@ const MultiplayerMode = () => {
     socket.on("match_found", handleMatchFound);
     socket.on("opponent_progress", handleOpponentProgress);
     socket.on("opponent_left", handleOpponentLeft);
-
     return () => {
       socket.off("waiting_for_opponent", handleWaiting);
       socket.off("No of players", handleOnline);
@@ -89,7 +92,6 @@ const MultiplayerMode = () => {
       socket.off("opponent_left", handleOpponentLeft);
     };
   }, [gameDuration]); 
-
   // Timer Logic
   useEffect(() => {
     let interval;
@@ -100,32 +102,52 @@ const MultiplayerMode = () => {
     } else if (countdown === 0 && GameState === "playing") {
       stopgame("time");
       setGameState("finished");
-
+      
       let HighestWPM = LiveWPM;
-      let WinningPlayer = 'You';   
+      let WinningPlayer = "You";
+      let isTie = false;
 
       Object.entries(opponents).forEach(([id, data], index) => {
         if (data.wpm > HighestWPM) {
           HighestWPM = data.wpm;
-          WinningPlayer = `Player ${index + 1}`; 
+          WinningPlayer = `Player ${index + 1}`;
+          isTie = false;
+        } else if (data.wpm === HighestWPM && HighestWPM === LiveWPM) {
+          // It's a tie
+          WinningPlayer = 'tied';
+          isTie = true;
         }
       });
+
+      console.log("Game result - Your WPM:", LiveWPM, "Highest opponent WPM:", HighestWPM, "Winner:", WinningPlayer, "Is Tie:", isTie);
       setWinner(WinningPlayer);
+
+      // Calculate accuracy for stats update
+      const accuracy = TotalTypedChars > 0 ? (CorrectChars / TotalTypedChars) * 100 : 0;
+
+      console.log("Updating multiplayer stats:", {
+        Wpm: Math.round(LiveWPM),
+        Accuracy: Math.round(accuracy * 10) / 10,
+        type: "multiplayer",
+        Winner: WinningPlayer
+      });
+
+      updateStats({
+        Wpm: Math.round(LiveWPM),
+        Accuracy: Math.round(accuracy * 10) / 10,
+        type: "multiplayer",
+        Winner: WinningPlayer
+      })
     }
     return () => clearInterval(interval);
   }, [GameState, countdown, setCountDown, stopgame, opponents, LiveWPM]);
 
-  // --- FIXED EMITTER LOGIC ---
+
   useEffect(() => {
     if (GameState !== "playing" || !text) return;
 
     const percent = Math.floor((typedChars.length / text.length) * 100);
     const currentWPM = LiveWPM || 0;
-
-    // Send update IF:
-    // 1. Progress percentage changed
-    // 2. OR WPM changed significantly (more than 2 to avoid spam)
-    // 3. OR it's the very first update (refs are -1)
     const hasProgressChanged = percent !== lastSentProgress.current;
     const hasWpmChanged = Math.abs(currentWPM - lastSentWpm.current) > 2;
 
@@ -192,7 +214,7 @@ const MultiplayerMode = () => {
             Online: <span className="text-green-500">●</span> {OnlineUsers} Players
           </div>
         </div>
-      )}
+      )}  
 
       {(GameState === "searching" || GameState === "waiting") && (
         <div className="flex flex-col items-center gap-6">

@@ -1,4 +1,5 @@
 import User from "../Models/user.model.js";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../lib/utils.js";
 
@@ -16,7 +17,6 @@ export const signup=async (req,res)=>
     return res.status(400).json({
       message:"user with this email already exists"
     })
-
   }
   try{
 
@@ -90,6 +90,7 @@ export const logout = (req, res) => {
       secure: process.env.NODE_ENV !== "Development",
       sameSite: "strict", 
     });
+    console.log("at logout");
     res.status(200).json({ message: "Logout successful" });
   } catch (err) {
     console.error("error occurred", err.message);
@@ -116,7 +117,7 @@ export const updateprofile = async (req, res) => {
 
     console.log(uploadResponse);
 
-  
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { profile_pic: uploadResponse.secure_url },
@@ -137,14 +138,16 @@ export const updateprofile = async (req, res) => {
   }
 };*/
 export const checkauth=(req,res)=>
-{
-    try{
-       res.json(
-          req.user
-        )
-    }
-    catch(err)
-    {
-      res.status(401).send("not authorized");
-    }
-}
+  {
+    console.log("auth fetched successfully");
+      try{
+         res.json(
+            req.user
+          )
+        console.log(req.user);
+      }
+      catch(err)
+      {
+        res.status(401).send("not authorized");
+      }
+  }

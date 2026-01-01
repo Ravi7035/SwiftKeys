@@ -3,7 +3,7 @@ import SentenceGenerator from "../components/SentenceGenerator.jsx";
 import Timer from "../components/Timer.jsx";
 import { useGameStore } from "../store/Gamestore.js";
 import Gameover from "../components/Gameover.jsx";
-import ConfigBar from "../components/ConfigBar.jsx";
+import ConfigBar from "../components/Configbar.jsx";
 
 const HomePage = ({ refreshKey }) => {
 
@@ -36,6 +36,8 @@ const HomePage = ({ refreshKey }) => {
           <div className="w-full flex-1 flex items-center pb-32">
             <SentenceGenerator key={refreshKey} />
           </div>
+
+          <div ></div>
         </>
       ) : (
         <Gameover />

@@ -1,5 +1,7 @@
 import { useGameStore } from "../store/Gamestore.js";
 import LineGraph from "./LineGraph.jsx";
+import { useEffect } from "react";
+import { useStatsStore } from "../store/Stats.store.js";
 import { RefreshCcw, AlertTriangle, Ghost, Skull, Ban } from "lucide-react"; 
 
 const Gameover = () => {
@@ -11,10 +13,10 @@ const Gameover = () => {
     countdown,
     gameOverReason,
     resetGame,
-    difficulty
+    difficulty,
+    text
   } = useGameStore();
-
- 
+   const {updateStats} =useStatsStore();
   if (!isGameover) return null;
   
   const elapsedSeconds = gameDuration - (countdown > 0 ? countdown : 0);
@@ -25,18 +27,54 @@ const Gameover = () => {
   const accuracy = TotalTypedChars > 0 ? (CorrectChars / TotalTypedChars) * 100 : 0;
   const incorrect = TotalTypedChars - CorrectChars;
 
+  const actuallyCompleted=CorrectChars.length===text.length
+   
+ 
+  //Update Stats for casual mode
   useEffect(()=>
     {
-      if(isGameover && (gameOverReason!=="death_fail" || gameOverReason!="ghost_death" && elapsedSeconds > 0))
+      if (isGameover &&  gameOverReason === "time" && difficulty==="none" )
       {
-        
-  
-      }
-      
-    },[isGameover,gameOverReason])
-    
+        updateStats(
+          {
+            Wpm:Math.round(netWpm),
+            Accuracy:Math.round(accuracy *10)/10
+          }
+        )
+      } 
+    },[isGameover,difficulty,gameOverReason]);
 
-  if (gameOverReason === 'death_fail' && elapsedSeconds==0) {
+    //update Stats for death mode
+    useEffect(()=>
+      {
+        if (isGameover &&  actuallyCompleted && gameOverReason==="time" && difficulty==="death" )
+        {
+          updateStats(
+            {
+              Wpm:Math.round(netWpm),
+              Accuracy:Math.round(accuracy *10)/10
+            }
+          )
+        } 
+      },[isGameover,difficulty,gameOverReason]);
+
+      //update Stats for ghost mode
+
+      useEffect(()=>
+        {
+          if (isGameover && gameOverReason==="time" && difficulty==="ghost" )
+          {
+            updateStats(
+              {
+                wpm:Math.round(netWpm),
+                accuracy:Math.round(accuracy *10)/10
+              }
+            )
+          } 
+        },[isGameover,difficulty,gameOverReason]);
+  
+
+  if (gameOverReason === 'death_fail' && !actuallyCompleted ) {
     return (
         <div className="w-full min-h-screen flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 py-10 px-8">
             <div className="flex flex-col items-center gap-8 bg-[#2c2e31]/30 p-12 rounded-2xl border border-[#ca4754]/20 shadow-2xl backdrop-blur-sm">
@@ -51,7 +89,7 @@ const Gameover = () => {
     );
   }
 
-  if (gameOverReason === 'ghost_death' && elapsedSeconds==0) {
+  if (gameOverReason === 'ghost_death' && elapsedSeconds > 0) {
     return (
         <div className="w-full min-h-screen flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 py-10 px-8">
             <div className="flex flex-col items-center gap-8 bg-[#2c2e31]/30 p-12 rounded-2xl border border-[#ca4754]/20 shadow-2xl backdrop-blur-sm">
@@ -59,11 +97,6 @@ const Gameover = () => {
                 <div className="text-center">
                     <h1 className="text-5xl md:text-6xl font-mono font-bold text-[#ca4754] tracking-widest uppercase mb-2">Defeated</h1>
                     <p className="text-[#646669] font-mono text-xl tracking-wide">You were caught by the ghost</p>
-                </div>
-                <div className="flex gap-12 mt-4 text-[#646669] font-mono text-2xl bg-[#1d1f23] px-8 py-4 rounded-xl border border-[#2c2e31]">
-                    <div className="flex flex-col items-center"><span className="text-sm">Speed</span><span className="text-[#e2b714] font-bold">{netWpm.toFixed(0)}</span></div>
-                    <div className="w-px bg-[#2c2e31]"></div>
-                    <div className="flex flex-col items-center"><span className="text-sm">Accuracy</span><span className="text-[#e2b714] font-bold">{accuracy.toFixed(0)}%</span></div>
                 </div>
                 <button onClick={resetGame} className="mt-4 bg-[#ca4754] text-white px-8 py-3 rounded-lg font-bold">Try Again</button>
             </div>
