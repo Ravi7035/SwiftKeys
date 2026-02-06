@@ -2,6 +2,14 @@ import User from "../Models/user.model.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../lib/utils.js";
+import { v2 as cloudinary } from "cloudinary";
+
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export const signup=async (req,res)=>
 { 
@@ -76,6 +84,7 @@ export const login = async (req, res) => {
       _id: user._id,
       username: user.username,
       email: user.email,
+      profile_pic: user.profile_pic,
     });
   } catch (err) {
     console.error("Login error:", err.message);
@@ -98,45 +107,40 @@ export const logout = (req, res) => {
   }
 };
 
-/*
+
 export const updateprofile = async (req, res) => {
   try {
     const { profile_pic } = req.body;  
     const userId = req.user._id;
 
-    console.log(profile_pic)
+    console.log("Image data received:", profile_pic ? "yes" : "no");
 
     if (!profile_pic) {
       return res.status(400).send("No image provided");
     }
 
-   
     const uploadResponse = await cloudinary.uploader.upload(profile_pic, {
-      folder: "GO_CHAT",
+      folder: "SwiftKeys/profiles",
     });
 
-    console.log(uploadResponse);
-
+    console.log("Uploaded to Cloudinary:", uploadResponse.secure_url);
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { profile_pic: uploadResponse.secure_url },
-      { new: true,select:"-password" }
+      { new: true, select: "-password" }
     );
-    console.log(profile_pic)
 
     if (!updatedUser) {
       return res.status(500).send("User not found");
     }
 
-    res.status(200).json(
-      updatedUser
-    );
+    res.status(200).json(updatedUser);
   } catch (err) {
     console.error("Error updating profile:", err.message);
     res.status(500).send("Server error");
   }
-};*/
+};
 export const checkauth=(req,res)=>
   {
     console.log("auth fetched successfully");

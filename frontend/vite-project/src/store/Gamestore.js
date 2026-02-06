@@ -61,6 +61,7 @@ export const useGameStore = create((set) => ({
   setDifficulty: (diff) => set({ difficulty: diff }),
   setSavedDifficulty: (diff) => set({ savedDifficulty: diff }),
   setDeathWPM: (wpm) => set({ deathWPM: wpm }),
+  setIsTyping: (typing) => set({ isTyping: typing }),
 
   addWPMEntry: (wpm) =>
     set((state) => ({ WPM_History: [...state.WPM_History, wpm] })),
@@ -80,7 +81,7 @@ export const useGameStore = create((set) => ({
     });
   },
 
-  stopgame: (reason) => {
+  stopgame: (reason)=> {
     set((state) => ({
       isRunning: false,
       isGameover: true,

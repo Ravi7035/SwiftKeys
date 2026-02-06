@@ -2,7 +2,99 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
+
+/* Custom animations for ghost death UI */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shine {
+  from { transform: translateX(-100%) skewX(-12deg); }
+  to { transform: translateX(200%) skewX(-12deg); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+.animation-delay-500 {
+  animation-delay: 0.5s;
+}
+
+.animation-delay-1000 {
+  animation-delay: 1s;
+}
+
+.animate-shine {
+  animation: shine 1s ease-in-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+@keyframes line-push-up {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+}
+
+@keyframes line-slide-up-from-below {
+  0% {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-line-push-up {
+  animation: line-push-up 0.4s ease-out forwards;
+}
+
+.animate-line-slide-up-from-below {
+  animation: line-slide-up-from-below 0.4s ease-out forwards;
+}
+
+@keyframes line-scroll-up {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes line-slide-in {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-line-scroll-up {
+  animation: line-scroll-up 0.3s ease-out forwards;
+}
+
+.animate-line-slide-in {
+  animation: line-slide-in 0.3s ease-out forwards;
+}
 
 /* Science Gothic font - Variable font */
 
@@ -62,8 +154,16 @@
     @apply border-border;
   }
 
+  /* Ensure the document and root container expand to full height so
+     page backgrounds always cover added content and pages can grow. */
+  html, body, #root {
+    height: 100%;
+    min-height: 100%;
+  }
+
   body {
     @apply bg-background text-foreground font-sans;
+    min-height: 100vh;
   }
 
   
@@ -98,4 +198,29 @@
 .font-digital {
   font-family: 'Orbitron', monospace;
   font-weight: 700;
+}
+
+/* Custom Scrollbar Styles */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #e2b714 #2c2e31;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #2c2e31;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2b714;
+  border-radius: 4px;
+  border: 1px solid #2c2e31;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #f5c518;
 }

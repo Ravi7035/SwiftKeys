@@ -1,110 +1,93 @@
 import { motion } from "framer-motion";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { GithubIcon } from "lucide-react";
-import  userAuthStore  from "../store/AuthenticationStore";
+import { Mail, Lock } from "lucide-react";
+import userAuthStore from "../store/AuthenticationStore";
 import toast from "react-hot-toast";
 
-import { Separator } from "./ui/separator";
-
 const LoginForm = () => {
-  const {login}=userAuthStore();
-  const [FormData,setFormData]=useState({
-    email:"",
-    password:""
+  const { login } = userAuthStore();
+  const [FormData, setFormData] = useState({
+    email: "",
+    password: ""
   });
-  const validateForm=()=>
-    {
-      if(!FormData.email){
-          return   toast.error("username required")
-      }
-      if(!FormData.password){
-          return   toast.error("password required!")
-      }
-      return true
+  const [isLoading, setIsLoading] = useState(false);
+
+  const validateForm = () => {
+    if (!FormData.email) {
+      toast.error("Email required");
+      return false;
     }
-  const handleSubmit=async(e)=>{
-    const success=validateForm();
-    if(!success) return;
+    if (!FormData.password) {
+      toast.error("Password required");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login(FormData);
-  }
- 
+    if (!validateForm()) return;
+    setIsLoading(true);
+    await login(FormData);
+    setIsLoading(false);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full max-w-md mx-auto"
+      className="w-full max-w-sm"
     >
-      <Card className="shadow-lg border-border/50 h-full">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-semibold">Welcome back</CardTitle>
-          <CardDescription>
-            Enter your credentials to access your account
-          </CardDescription>
-        </CardHeader>
+      <div className="bg-gradient-to-b from-neutral-700 to-neutral-800 border border-neutral-600 rounded-2xl p-8 shadow-2xl flex flex-col h-[450px] backdrop-blur-sm">
+        {/* Header */}
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
+            Welcome back
+          </h2>
+          <p className="text-neutral-400 text-sm">Enter your credentials to access your account</p>
+        </div>
 
-        <CardContent className="space-y-4">
-          <Button
-            variant="outline"
-            className="w-full gap-2 border-border/50 bg-primary hover hover:bg-secondary cursor cursor-pointer"
-          >
-            <GithubIcon className="h-5 w-5" />
-            Continue with GitHub
-          </Button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-          <form className="login-form" onSubmit={handleSubmit}>
-          <div className="space-y-2">
-            <Label htmlFor="login-email">Email</Label>
-            <Input
-              id="login-email"
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-5 flex flex-col">
+          {/* Email Field */}
+          <div>
+            <label className="text-xs uppercase tracking-widest text-neutral-300 font-bold block mb-2.5 flex items-center gap-2">
+              <Mail size={15} /> Email
+            </label>
+            <input
               type="email"
               placeholder="you@example.com"
               value={FormData.email}
-              onChange={(e)=>
-              {
-                setFormData({...FormData,email:e.target.value})
-              }
-            }
-              className="transition-all focus:ring-2 focus:ring-primary/20"
+              onChange={(e) => setFormData({ ...FormData, email: e.target.value })}
+              className="w-full px-4 py-3 rounded-lg border-2 border-neutral-600 bg-neutral-900/50 text-white placeholder-neutral-500 hover:border-neutral-500 focus:border-yellow-500 focus:bg-neutral-900 focus:outline-none transition-all text-sm font-medium"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="login-password">Password</Label>
-            <Input
-              id="login-password"
+          {/* Password Field */}
+          <div>
+            <label className="text-xs uppercase tracking-widest text-neutral-300 font-bold block mb-2.5 flex items-center gap-2">
+              <Lock size={15} /> Password
+            </label>
+            <input
               type="password"
               placeholder="••••••••"
               value={FormData.password}
-              onChange={(e)=>
-              {
-                setFormData({...FormData,password:e.target.value})
-              }
-            }
-              className="transition-all focus:ring-2 focus:ring-primary/20"
-            /> 
+              onChange={(e) => setFormData({ ...FormData, password: e.target.value })}
+              className="w-full px-4 py-3 rounded-lg border-2 border-neutral-600 bg-neutral-900/50 text-white placeholder-neutral-500 hover:border-neutral-500 focus:border-yellow-500 focus:bg-neutral-900 focus:outline-none transition-all text-sm font-medium"
+            />
           </div>
-          <Button type="submit" className="w-full mt-6 shadow-md hover:shadow-lg transition-all cursor-pointer">
-             Login
-          </Button>
-          </form>
-        </CardContent>
-      </Card>
+
+          {/* Login Button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 disabled:from-gray-600 disabled:to-gray-700 text-black font-bold py-3 rounded-lg transition-all duration-200 mt-auto cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+          >
+            {isLoading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+      </div>
     </motion.div>
   );
 };

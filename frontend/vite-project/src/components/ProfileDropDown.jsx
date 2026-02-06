@@ -13,7 +13,9 @@ const ProfileDropDown = () => {
 
   const menuItems = [
     { label: 'Stats', icon: <BarChart3 size={18} />, action: stats },
+    { label: 'User Details', icon: <User size={18} />, action: () => navigate("/userdetails") },
     { label: 'Logout', icon: <LogOut size={18} />, action: logout },
+
   ];
 
   return (

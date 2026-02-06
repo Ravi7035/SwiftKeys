@@ -7,40 +7,44 @@ import ConfigBar from "../components/Configbar.jsx";
 
 const HomePage = ({ refreshKey }) => {
 
-  const { 
-    isTyping, 
-    isRunning, 
-    countdown, 
+  const {
+    isTyping,
+    isRunning,
+    countdown,
     stopgame,
-    gameDuration
+    gameDuration,
+    gameMode,
+    isGameover
   } = useGameStore();
 
   useEffect(() => {
-    if (countdown === 0) {
-      stopgame();
+    if (countdown === 0 && isRunning && gameMode === "time") {
+      stopgame('time');
     }
-  }, [countdown, stopgame]);
+  }, [countdown, stopgame, isRunning, gameMode]);
 
   return (
-    <div className="relative h-screen bg-black text-white flex flex-col pt-16 ">
-      {countdown > 0 ? (
+    <div className="relative min-h-screen bg-black text-white flex flex-col pt-16 ">
+      {isGameover ? (
+        <Gameover />
+      ) : (
         <>
           <div className="flex justify-center pt-8 sm:pt-12 pb-6 z-10 min-h-[100px]">
-            {isTyping && isRunning ? (
-              <Timer totalSeconds={gameDuration} />
+            {isTyping ? (
+              gameMode === "time" && isRunning ? (
+                <Timer totalSeconds={gameDuration} />
+              ) : null
             ) : (
               <ConfigBar />
             )}
           </div>
 
-          <div className="w-full flex-1 flex items-center pb-32">
+          <div className="w-full flex-1 flex items-center justify-center">
             <SentenceGenerator key={refreshKey} />
           </div>
 
           <div ></div>
         </>
-      ) : (
-        <Gameover />
       )}
     </div>
   );

@@ -1,13 +1,12 @@
 import { useEffect, useState, useRef } from "react";
-import { Loader2, User, Users, Trophy, Clock } from "lucide-react";
+import { User, Users, Trophy, ChevronRight } from "lucide-react";
 import socket from "../socket.js";
 import { useGameStore } from "../store/Gamestore.js";
 import SentenceGenerator from "./SentenceGenerator.jsx";
-import { useStatsStore } from "../store/Stats.store.js";
+import { Spinner } from "./ui/spinner.jsx";
 
 const MultiplayerMode = () => {
   const {
-    setOpponentProgress,
     setGameData,
     GameState,
     setGameState,
@@ -18,314 +17,216 @@ const MultiplayerMode = () => {
     OnlineUsers,
     LiveWPM,
     setLiveWPM,
-    countdown,
-    gameDuration,
     startgame,
-    setCountDown,
     stopgame,
     Winner,
     setWinner,
-    CorrectChars,
-    TotalTypedChars
   } = useGameStore();
-  const{updateStats}=useStatsStore();
 
   const [selectedMode, setSelectedMode] = useState("1v1");
   const [opponents, setOpponents] = useState({});
+  const [waitingForOpponent, setWaitingForOpponent] = useState(false);
+  const [gameResult, setGameResult] = useState(null);
   
-  // Refs to track what we last sent to the server
   const lastSentProgress = useRef(-1); 
   const lastSentWpm = useRef(-1);
 
+  const myProgress = text ? Math.floor((typedChars.length / text.length) * 100) : 0;
+
   useEffect(() => {
     if (!socket.connected) socket.connect();
-  }, []);
-
-  useEffect(() => {
+    
     const handleWaiting = () => setGameState("waiting");
     const handleOnline = (data) => setOnlineUsers(data);
-    
     const handleMatchFound = (data) => {
-      // 1. Reset Game Data
-      setCountDown(gameDuration);
       setGameData(data);
       setOpponents({});
-      
-      // 2. FORCE Reset WPM to 0 so we don't send old scores
-      setLiveWPM(0); 
-
-      // 3. Reset Refs so the new game starts clean
+      setWaitingForOpponent(false);
+      setGameResult(null);
+      setLiveWPM(0);
       lastSentProgress.current = -1;
       lastSentWpm.current = -1;
-
-      startgame(); 
+      startgame();
     };
 
     const handleOpponentProgress = (data) => {
       setOpponents((prev) => ({
         ...prev,
-        [data.playerId]: {
-          wpm: data.wpm || 0,
-          progress: data.progress || 0
-        }
+        [data.playerId]: { wpm: data.wpm || 0, progress: data.progress || 0 }
       }));
     };
 
-    const handleOpponentLeft = (data) => {
-      setOpponents((prev) => {
-        const newOpponents = { ...prev };
-        delete newOpponents[data.playerId];
-        return newOpponents;
-      });
+    const handleGameResult = (result) => {
+      setGameResult(result);
+      setWaitingForOpponent(false);
+      setGameState("finished");
+      stopgame();
+      setWinner(result.winner === socket.id ? "You" : "Opponent");
     };
 
     socket.on("waiting_for_opponent", handleWaiting);
     socket.on("No of players", handleOnline);
     socket.on("match_found", handleMatchFound);
     socket.on("opponent_progress", handleOpponentProgress);
-    socket.on("opponent_left", handleOpponentLeft);
+    socket.on("game_result", handleGameResult);
+
     return () => {
-      socket.off("waiting_for_opponent", handleWaiting);
-      socket.off("No of players", handleOnline);
-      socket.off("match_found", handleMatchFound);
-      socket.off("opponent_progress", handleOpponentProgress);
-      socket.off("opponent_left", handleOpponentLeft);
+      socket.off("waiting_for_opponent");
+      socket.off("No of players");
+      socket.off("match_found");
+      socket.off("opponent_progress");
+      socket.off("game_result");
     };
-  }, [gameDuration]); 
-  // Timer Logic
-  useEffect(() => {
-    let interval;
-    if (GameState === "playing" && countdown > 0) {
-      interval = setInterval(() => {
-        setCountDown((prev) => prev - 1);
-      }, 1000);
-    } else if (countdown === 0 && GameState === "playing") {
-      stopgame("time");
-      setGameState("finished");
-      
-      let HighestWPM = LiveWPM;
-      let WinningPlayer = "You";
-      let isTie = false;
-
-      Object.entries(opponents).forEach(([id, data], index) => {
-        if (data.wpm > HighestWPM) {
-          HighestWPM = data.wpm;
-          WinningPlayer = `Player ${index + 1}`;
-          isTie = false;
-        } else if (data.wpm === HighestWPM && HighestWPM === LiveWPM) {
-          // It's a tie
-          WinningPlayer = 'tied';
-          isTie = true;
-        }
-      });
-
-      console.log("Game result - Your WPM:", LiveWPM, "Highest opponent WPM:", HighestWPM, "Winner:", WinningPlayer, "Is Tie:", isTie);
-      setWinner(WinningPlayer);
-
-      // Calculate accuracy for stats update
-      const accuracy = TotalTypedChars > 0 ? (CorrectChars / TotalTypedChars) * 100 : 0;
-
-      console.log("Updating multiplayer stats:", {
-        Wpm: Math.round(LiveWPM),
-        Accuracy: Math.round(accuracy * 10) / 10,
-        type: "multiplayer",
-        Winner: WinningPlayer
-      });
-
-      updateStats({
-        Wpm: Math.round(LiveWPM),
-        Accuracy: Math.round(accuracy * 10) / 10,
-        type: "multiplayer",
-        Winner: WinningPlayer
-      })
-    }
-    return () => clearInterval(interval);
-  }, [GameState, countdown, setCountDown, stopgame, opponents, LiveWPM]);
-
+  }, []);
 
   useEffect(() => {
     if (GameState !== "playing" || !text) return;
-
-    const percent = Math.floor((typedChars.length / text.length) * 100);
     const currentWPM = LiveWPM || 0;
-    const hasProgressChanged = percent !== lastSentProgress.current;
-    const hasWpmChanged = Math.abs(currentWPM - lastSentWpm.current) > 2;
-
-    if (hasProgressChanged || hasWpmChanged) {
-        socket.emit("type_progress", { 
-          roomId, 
-          progress: percent, 
-          wpm: currentWPM
-        });
-        
-        lastSentProgress.current = percent;
+    if (myProgress !== lastSentProgress.current || Math.abs(currentWPM - lastSentWpm.current) > 2) {
+        socket.emit("type_progress", { roomId, progress: myProgress, wpm: currentWPM });
+        lastSentProgress.current = myProgress;
         lastSentWpm.current = currentWPM;
     }
-
-  }, [typedChars, GameState, roomId, text, LiveWPM]);
-
-  const handleFindMatch = () => {
-    socket.emit("find_match", { mode: selectedMode });
-    setGameState("searching");
-  };
-
-  const cancelMatch = () => {
-    socket.emit("cancel_match");
-    setGameState("Idle");
-  };
+  }, [typedChars, GameState, roomId, text, LiveWPM, myProgress]);
 
   const ModeCard = ({ mode, label, icon: Icon }) => (
     <button
       onClick={() => setSelectedMode(mode)}
-      className={`p-6 rounded-xl border cursor-pointer transition-all ${
+      className={`flex flex-col items-center cursor-pointer justify-center py-5 md:py-7 rounded-xl border-2 transition-all duration-200 ${
         selectedMode === mode
-          ? "border-yellow-400 text-yellow-400 bg-yellow-400/10"
-          : "border-gray-700 text-gray-400 hover:border-gray-500"
+          ? "border-yellow-400 bg-yellow-400/10 text-yellow-400 shadow-sm"
+          : "border-white/5 bg-[#0e0e0e] text-gray-500 hover:border-white/10"
       }`}
     >
-      <Icon className="w-6 h-6 mb-2 mx-auto" />
-      <span className="text-xs uppercase">{label}</span>
+      <Icon className="w-5 h-5 md:w-7 md:h-7 mb-2" />
+      <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">{label}</span>
     </button>
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white">
-      {GameState === "Idle" && (
-        <div className="w-full max-w-2xl">
-          <h1 className="text-4xl text-center mb-3">Multiplayer</h1>
-          <p className="text-center text-gray-500 mb-8">
-            Select a mode and start racing
-          </p>
+    <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
+      <div className="w-full max-w-md md:max-w-xl mx-auto">
+        
+        {/* --- LOBBY --- */}
+        {GameState === "Idle" && (
+          <div className="space-y-8 animate-in fade-in duration-500">
+            <h1 className="text-3xl md:text-4xl font-medium tracking-tight text-center text-gray-100">
+              Multiplayer
+            </h1>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-6">
-            <ModeCard mode="1v1" label="1 vs 1" icon={User} />
-            <ModeCard mode="1v2" label="1 vs 2" icon={Users} />
-            <ModeCard mode="1v3" label="1 vs 3" icon={Users} />
-          </div>
-
-          <button
-            onClick={handleFindMatch}
-            className="w-full py-4 bg-yellow-400 text-black rounded-xl font-bold hover:bg-yellow-500 transition-colors"
-          >
-            Find Match
-          </button>
-
-          <div className="mt-6 text-center text-gray-500">
-            Online: <span className="text-green-500">●</span> {OnlineUsers} Players
-          </div>
-        </div>
-      )}  
-
-      {(GameState === "searching" || GameState === "waiting") && (
-        <div className="flex flex-col items-center gap-6">
-          <Loader2 className="w-16 h-16 animate-spin text-yellow-400" />
-          <h2 className="text-xl">Searching for opponent...</h2>
-          <button
-            onClick={cancelMatch}
-            className="border border-gray-700 px-6 py-2 rounded-full text-gray-400 hover:bg-gray-800 transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      )}
-
-      {GameState === "playing" && (
-        <div className="w-full max-w-4xl flex flex-col gap-8">
-          
-          <div className="w-full flex items-end justify-between px-4 pb-4 border-b border-gray-800 relative">
-            
-            <div className="flex-1 text-left">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1 block">
-                YOU
-              </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-6xl font-black text-yellow-400 font-mono">
-                  {LiveWPM}
-                </span>
-                <span className="text-sm font-bold text-yellow-600">WPM</span>
-              </div>
+            <div className="grid grid-cols-3 gap-3 md:gap-4">
+              <ModeCard mode="1v1" label="1v1" icon={User} />
+              <ModeCard mode="1v2" label="1v2" icon={Users} />
+              <ModeCard mode="1v3" label="1v3" icon={Users} />
             </div>
 
-            <div className="flex flex-col items-center justify-end pb-2 px-8">
-               <div className="flex items-center gap-2 text-gray-400 mb-1">
-                 <Clock className="w-4 h-4" />
-               </div>
-               <span className={`text-4xl font-mono font-bold ${countdown < 10 ? "text-red-500" : "text-white"}`}>
-                 {countdown}
-               </span>
-            </div>
-
-            <div className="flex-1 text-right flex flex-col items-end gap-2">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1 block">
-                OPPONENTS
-              </span>
-              
-              {Object.keys(opponents).length === 0 && (
-                <span className="text-gray-600 text-sm italic">Waiting for input...</span>
-              )}
-
-              {Object.entries(opponents).map(([id, data], index) => (
-                <div key={id} className="flex items-baseline gap-2 flex-row-reverse">
-                  <span className="text-4xl font-black text-yellow-400 font-mono">
-                    {data.wpm}
-                  </span>
-                  <span className="text-xs font-bold text-gray-500">
-                    P{index + 1}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-          </div>
-
-          <SentenceGenerator />
-        </div>
-      )}
- 
-      {/* --- GAME OVER MODAL --- */}
-      {GameState === "finished" && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-gray-900 border border-gray-800 p-10 rounded-2xl text-center max-w-lg w-full shadow-2xl relative overflow-hidden">
-            
-            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 blur-[100px] -z-10 ${
-              Winner === "You" ? "bg-yellow-500/20" : "bg-red-500/20"
-            }`}></div>
-
-            <h2 className="text-4xl font-black italic tracking-tighter mb-2 text-white">
-              TIME'S UP!
-            </h2>
-            
-            <p className="text-gray-400 text-sm uppercase tracking-widest mb-8">
-              The race has ended
-            </p>
-
-            <div className="py-8 border-y border-gray-800 mb-8">
-              <span className="text-xs text-gray-500 uppercase tracking-widest">WINNER</span>
-              <div className={`text-7xl font-black mt-2 font-mono drop-shadow-lg ${
-                Winner === "You" ? "text-yellow-400" : "text-white"
-              }`}>
-                {Winner === "You" ? "YOU" : Winner}
-              </div>
-              {Winner !== "You" && (
-                <p className="text-gray-500 text-sm mt-2">Better luck next time</p>
-              )}
-            </div>
-
-            <button 
-              onClick={() => {
-                  setGameState("Idle");
-                  setWinner(null);
-                  setOpponents({});
-                  setLiveWPM(0); // Reset local WPM on exit too
-              }}
-              className="w-full py-4 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-xl transition-all uppercase tracking-wider transform hover:scale-[1.02] active:scale-[0.98]"
+            <button
+              onClick={() => socket.emit("find_match", { mode: selectedMode })}
+              className="w-full py-4 md:py-5 bg-yellow-400 text-black rounded-xl font-bold uppercase flex items-center justify-center gap-2 hover:bg-yellow-300 transition-all active:scale-[0.98] text-sm md:text-lg shadow-lg"
             >
-              Return to Lobby
+              Find Match <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
             </button>
 
+            <div className="flex items-center justify-center gap-2 text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-widest">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+              {OnlineUsers} Online
+            </div>
+          </div>
+        )}
+
+        {/* --- QUEUE --- */}
+        {(GameState === "searching" || GameState === "waiting") && (
+          <div className="flex flex-col items-center py-12 space-y-6">
+            <Spinner className="w-12 h-12 text-yellow-400" />
+            <h2 className="text-xs md:text-sm font-bold uppercase tracking-[0.2em] text-gray-400">Searching for match...</h2>
+            <button
+              onClick={() => { socket.emit("cancel_match"); setGameState("Idle"); }}
+              className="text-[15px] font-bold text-white-600 uppercase border-b border-gray-800 hover:text-red-500 cursor-pointer   pb-1"
+            >
+              Cancel Match
+            </button>
+          </div>
+        )}
+
+        {/* --- GAMEPLAY --- */}
+        {GameState === "playing" && (
+  <div className="animate-in fade-in duration-500 space-y-4 sm:space-y-6">
+  {/* Race Track Container */}
+  <div className="bg-[#0e0e0e] p-4 sm:p-6 md:p-7 rounded-xl sm:rounded-2xl border border-white/5 space-y-4 sm:space-y-6">
+    
+    {/* User Progress - Elevated Visuals */}
+    <div className="space-y-2">
+      <div className="flex justify-between items-end text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+        <span className="text-yellow-400 flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+          You
+        </span>
+        <span className="text-gray-200 tabular-nums">{LiveWPM} <span className="text-[8px] opacity-60">WPM</span></span>
+      </div>
+      <div className="h-2 sm:h-2.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/[0.02]">
+        <div 
+          className="h-full bg-yellow-400 transition-all duration-500 ease-out shadow-[0_0_12px_rgba(250,204,21,0.4)]" 
+          style={{ width: `${myProgress}%` }} 
+        />
+      </div>
+    </div>
+
+    {/* Separator for clarity on mobile */}
+    <div className="h-px w-full bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+
+    {/* Opponents Grid */}
+    <div className="grid grid-cols-1 gap-3 sm:gap-4">
+      {Object.entries(opponents).map(([id, data], idx) => (
+        <div key={id} className="space-y-1.5">
+          <div className="flex justify-between text-[9px] sm:text-[10px] font-bold uppercase text-gray-500 tracking-wide">
+            <span className="truncate max-w-[120px]">Opponent {idx + 1}</span>
+            <span className="tabular-nums">{data.wpm} WPM</span>
+          </div>
+          <div className="h-1 sm:h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-blue-600/80 transition-all duration-700 ease-out" 
+              style={{ width: `${data.progress}%` }} 
+            />
           </div>
         </div>
-      )}
+      ))}
+    </div>
+  </div>
+
+  {/* Input Area */}
+  <SentenceGenerator />
+</div>
+        )}
+
+        {/* --- RESULTS --- */}
+        {GameState === "finished" && (
+          <div className="text-center space-y-8 animate-in zoom-in-95 duration-300">
+            <Trophy className={`w-12 h-12 md:w-16 md:h-16 mx-auto ${Winner === "You" ? "text-yellow-400" : "text-gray-700"}`} />
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tight">
+                {Winner === "You" ? "Victory" : "Race Complete"}
+              </h2>
+              <div className="flex justify-center gap-10 md:gap-16 mt-6">
+                <div>
+                  <div className="text-xl md:text-3xl font-black">{gameResult?.winnerWPM || 0}</div>
+                  <div className="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase">Winner</div>
+                </div>
+                <div>
+                  <div className="text-xl md:text-3xl font-black text-gray-400">{gameResult?.loserWPM || 0}</div>
+                  <div className="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase">Your WPM</div>
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={() => { setGameState("Idle"); setWinner(null); setOpponents({}); }}
+              className="w-full py-4 md:py-5 bg-white text-black font-bold rounded-xl md:rounded-2xl uppercase text-xs md:text-sm transition-transform active:scale-95 shadow-lg"
+            >
+              Back to Lobby
+            </button>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 };

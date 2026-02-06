@@ -11,6 +11,7 @@ import { useGameStore } from "./store/Gamestore.js";
 import { Toaster } from "react-hot-toast";
 import userAuthStore  from "./store/AuthenticationStore.js";
 import ProfileDropDown from "./components/ProfileDropDown.jsx";
+import UserDetails from "./components/userdetails.jsx";
 
 function App() {
  
@@ -32,15 +33,15 @@ function App() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-black text-white">
+    <div className="min-h-screen flex flex-col bg-black text-white">
       <Navbar onPracticeClick={handlePracticeClick} />
-
       <Routes>
         <Route path="/" element={<HomePage refreshKey={refreshKey} />} />
         <Route path="/auth" element={!userauth ? <AuthPage /> : <Navigate to="/" />} />
         <Route path="/multiplayer" element={userauth ? <MultiplayerMode/> : <Navigate to="/auth"/>}/>
         <Route path="/profile" element={userauth ? <ProfileDropDown/> : <Navigate to="/auth" />} />
         <Route path="/stats" element={userauth ? <StatsUI/> : <Navigate to="/auth" />} />
+        <Route path="/userdetails" element={userauth ? <UserDetails/> : <Navigate to="/auth" />} />
         <Route path="/leaderboard" element={<LeaderboardUI/>}/>
       </Routes>
       <Toaster

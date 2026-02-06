@@ -81,7 +81,8 @@ const userAuthStore = create((set,get) => ({
       set({isUpdatingprofile:true});
       const res=await axiosInstance.put("/auth/updateprofile",data,
         {
-          withCredentials:true
+          withCredentials:true,
+          headers: { "Content-Type": "application/json" }
         }
       );
       set({userauth:res.data});
@@ -90,8 +91,8 @@ const userAuthStore = create((set,get) => ({
     }
     catch(error)
     {
-      console.log("internal error occurred");
-      toast.error(error.response.data.message);
+      console.log("Error updating profile:", error);
+      toast.error(error.response?.data?.message || "Failed to update profile");
     }
     finally{
       set({isUpdatingprofile:false})

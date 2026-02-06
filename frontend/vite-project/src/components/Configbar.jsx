@@ -1,246 +1,108 @@
-import { 
-  Clock, Layers, Timer, Target, 
-  CloudFog,Skull, Ghost, Ban, ChevronDown, Code, Zap
+import {
+  Clock, Target, CloudFog, Skull, Ghost, 
+  Ban, BookOpen, ChevronLeft, ChevronRight
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
 import { useGameStore } from "../store/Gamestore";
 
 const ConfigBar = () => {
-  const { 
-    gameMode, setGameMode, 
-    gameDuration, setGameDuration,
-    difficulty, setDifficulty,
-    savedDifficulty, setSavedDifficulty,
-    deathWPM, setDeathWPM, 
-    resetGame
+  const {
+    gameMode, setGameMode, gameDuration, setGameDuration,
+    difficulty, setDifficulty, savedDifficulty, setSavedDifficulty,
+    deathWPM, setDeathWPM, resetGame
   } = useGameStore();
 
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [hoveredOption, setHoveredOption] = useState(null);
-  
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
   const difficultyOptions = [
-    { id: "none", label: "None", icon: Ban, desc: "Standard mode. No visual distractions." },
-    { id: "fog", label: "Fog", icon: CloudFog, desc: "A blurry fog covers the upcoming text." },
-    { id: "ghost", label: "Ghost", icon: Ghost, desc: "A cursor moves with custom WPM. If it overtakes you, you lose." },
-    { id: "death", label: "Death", icon: Skull, desc: "You will lose if you typed one mistake"},
-    { id: "code", label: "Code", icon: Code, desc: "Raw code format with bracket/syntax obstacles."},
+    { id: "none", label: "None", icon: Ban, desc: "Standard typing" },
+    { id: "fog", label: "Fog", icon: CloudFog, desc: "Blurry text" },
+    { id: "ghost", label: "Ghost", icon: Ghost, desc: "Race the ghost" },
+    { id: "death", label: "Death", icon: Skull, desc: "Instant fail" },
   ];
 
-  const currentMod = difficultyOptions.find(opt => opt.id === difficulty) || difficultyOptions[0];
-  const isModActive = difficulty !== "normal" && difficulty !== "none";
-  
-  const showSpeedSlider = difficulty === "ghost";
-
+  // RESPONSIVE CLASS: Large on desktop, slim on mobile
   const btnClass = (isActive) => `
-    px-3 py-1.5 rounded-md text-sm font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer
+    flex-1 flex flex-col items-center cursor-pointer transition-all duration-200 rounded-lg select-none
+    gap-0.5 md:gap-1.5 
+    py-1.5 md:py-3 px-1 md:px-4 
+    text-[10px] md:text-[14px] font-black uppercase tracking-wider
     ${isActive 
-      ? "text-yellow-500 bg-neutral-900 shadow-sm" 
-      : "text-neutral-300 hover:text-white hover:bg-white/10"
-    }
+      ? "bg-yellow-500 text-black shadow-lg scale-[1.02]" 
+      : "bg-neutral-800/90 text-white hover:bg-neutral-700"}
   `;
-
-  const labelClass = "flex items-center gap-2 px-3 border-r border-neutral-700/50 mr-1 text-neutral-500 select-none h-full";
 
   const handleDifficultyChange = (id) => {
     setDifficulty(id);
     setSavedDifficulty(id);
-    setIsDropdownOpen(false);
-    
-    if (id === 'ghost') setGameMode('death'); 
-    else setGameMode('challenge'); 
-    
-    resetGame();
-  };
-
-  const handleChallengeClick = () => {
-    setDifficulty(savedDifficulty);
-    
-    if (savedDifficulty === 'ghost') setGameMode('death');
-    else setGameMode('challenge');
-
+    id === 'ghost' ? setGameMode('death') : setGameMode('challenge');
     resetGame();
   };
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10 w-full select-none z-50 transition-all duration-500">
+    <div className="w-full flex flex-col items-center gap-2 md:gap-3 mb-6">
       
-      <div className="flex items-center bg-neutral-800 p-1.5 rounded-xl shadow-lg transition-transform duration-500">
-        <div className={labelClass}>
-          <Layers size={16} />
-          <span className="text-xs font-bold uppercase tracking-wider">
-            Options
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1 pl-1">
-          <button 
-            onClick={() => { setGameMode("time"); setDifficulty("none"); }} 
-            className={btnClass(gameMode === "time")}
-          >
-            <Clock size={14} />
-            <span>Time</span>
-          </button>
-          
-          <button 
-            onClick={handleChallengeClick} 
-            className={btnClass(gameMode === "challenge" || gameMode === "death")}
-          >
-            <Target size={14} />
-            <span>Challenge</span>
-          </button>
-        </div>
+      {/* --- MAIN MODES: Responsive Max-Width --- */}
+      <div className="w-full max-w-[280px] md:max-w-lg grid grid-cols-3 gap-1 md:gap-2 bg-neutral-900 p-1 md:p-1.5 rounded-xl border border-neutral-800">
+        <button onClick={() => { setGameMode("casual"); setDifficulty("none"); resetGame(); }} className={btnClass(gameMode === "casual")}>
+          <BookOpen className="w-3.5 h-3.5 md:w-5 md:h-5" strokeWidth={3} /> <span>Casual</span>
+        </button>
+        <button onClick={() => { setGameMode("time"); setDifficulty("none"); resetGame(); }} className={btnClass(gameMode === "time")}>
+          <Clock className="w-3.5 h-3.5 md:w-5 md:h-5" strokeWidth={3} /> <span>Time</span>
+        </button>
+        <button onClick={() => { setDifficulty(savedDifficulty); setGameMode(savedDifficulty === 'ghost' ? 'death' : 'challenge'); resetGame(); }} 
+          className={btnClass(gameMode === "challenge" || gameMode === "death")}>
+          <Target className="w-3.5 h-3.5 md:w-5 md:h-5" strokeWidth={3} /> <span>Challenge</span>
+        </button>
       </div>
 
-      <div className="flex items-center bg-neutral-800 p-1.5 rounded-xl shadow-lg relative transition-transform duration-500">
-        
-        {gameMode === "time" ? (
-          <>
-            <div className={labelClass}>
-              <Timer size={16} />
-              <span className="text-xs font-bold uppercase tracking-wider">
-                Time
-              </span>
+      {/* --- SUB-CONFIG: High Contrast & Compact --- */}
+      {gameMode !== "casual" && (
+        <div className="w-full max-w-[280px] md:max-w-lg bg-neutral-900/95 p-2 md:p-4 rounded-xl border border-neutral-800 shadow-xl">
+          
+          {gameMode === "time" ? (
+            <div className="flex items-center justify-between px-1 md:px-2">
+              <span className="text-[9px] md:text-xs font-black text-neutral-400 uppercase tracking-widest">Time</span>
+              <div className="flex gap-1 md:gap-2">
+                {[15, 30, 60].map((val) => (
+                  <button key={val} onClick={() => { setGameDuration(val); resetGame(); }}
+                    className={`px-3 md:px-5 py-1 md:py-2 cursor-pointer rounded-md font-black text-[11px] md:text-sm transition-all border-2 ${gameDuration === val ? "bg-white border-white text-black" : "border-neutral-800 text-white hover:border-neutral-600"}`}>
+                    {val}s
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex items-center gap-1 pl-1">
-              {[15, 30, 60, 100].map((val) => (
-                <button
-                  key={val}
-                  onClick={() => setGameDuration(val)}
-                  className={btnClass(gameDuration === val)}
-                >
-                  {val}
-                </button>
+          ) : (
+            <div className="grid grid-cols-4 gap-1 md:gap-2">
+              {difficultyOptions.map((opt) => (
+                <div key={opt.id} className="relative group">
+                  {/* --- TOOLTIP: Visible on Hover --- */}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50">
+                    <div className="bg-yellow-500 text-black text-[8px] md:text-[10px] font-black uppercase px-2 py-1 rounded shadow-xl whitespace-nowrap border border-black italic">
+                      {opt.desc}
+                    </div>
+                  </div>
+
+                  <button onClick={() => handleDifficultyChange(opt.id)}
+                    className={`w-full flex flex-col items-center cursor-pointer justify-center gap-1 md:gap-1.5 py-1.5 md:py-2.5 rounded-lg transition-all border-2 ${difficulty === opt.id ? "border-yellow-500 text-yellow-500 bg-yellow-500/10" : "border-transparent text-white hover:bg-neutral-800"}`}>
+                    <opt.icon className="w-3 h-3 md:w-4 md:h-4" strokeWidth={3} />
+                    <span className="text-[8px] md:text-[11px] font-black uppercase">{opt.label}</span>
+                  </button>
+                </div>
               ))}
             </div>
-          </>
-        ) : (
-          <>
-            <div className={labelClass}>
-              <Target size={16} />
-              <span className="text-xs font-bold uppercase tracking-wider">
-                Mode
-              </span>
-            </div>
-            
-            <div className="relative pl-1" ref={dropdownRef}>
-              <button 
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className={`flex items-center justify-between gap-3 px-3 py-1.5 cursor-pointer rounded-md text-sm font-bold min-w-[130px] transition-colors
-                  ${isDropdownOpen || isModActive
-                    ? "text-yellow-500 bg-neutral-900 shadow-sm"
-                    : "text-neutral-300 hover:text-white hover:bg-white/10"
-                  }
-                `}
-              >
-                <div className="flex items-center gap-2">
-                  <currentMod.icon size={14} />
-                  <span>{currentMod.label}</span>
-                </div>
-                <ChevronDown 
-                  size={14} 
-                  className={`transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`} 
-                />
-              </button>
+          )}
 
-              {isDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-full bg-neutral-800 border border-neutral-700 rounded-xl shadow-xl z-50 p-1 flex flex-col gap-0.5">
-                  {difficultyOptions.map((opt) => (
-                    <div key={opt.id} className="relative group">
-                        
-                        <button
-                          onClick={() => handleDifficultyChange(opt.id)}
-                          onMouseEnter={() => setHoveredOption(opt.id)}
-                          onMouseLeave={() => setHoveredOption(null)}
-                          className={`flex items-center gap-2 px-3 py-2 text-sm font-bold rounded-lg w-full text-left transition-colors cursor-pointer 
-                            ${difficulty === opt.id 
-                              ? "text-yellow-500 bg-neutral-900" 
-                              : "text-neutral-400 hover:text-white hover:bg-white/10"
-                            }
-                          `}
-                        >
-                          <opt.icon size={14} />
-                          <span>{opt.label}</span>
-                        </button>
-
-                        {hoveredOption === opt.id && (
-                            <div className="absolute left-full top-0 ml-3 w-48 p-3 bg-neutral-900 border border-neutral-700/80 rounded-lg shadow-2xl pointer-events-none animate-in fade-in zoom-in-95 duration-150 z-[60]">
-                                <div className="flex items-center gap-2 mb-1 text-yellow-500">
-                                    <opt.icon size={12} />
-                                    <span className="text-xs font-bold uppercase">{opt.label}</span>
-                                </div>
-                                <p className="text-xs text-neutral-400 leading-relaxed">
-                                    {opt.desc}
-                                </p>
-                                <div className="absolute top-3 -left-1 w-2 h-2 bg-neutral-900 border-l border-b border-neutral-700/80 transform rotate-45"></div>
-                            </div>
-                        )}
-                    </div>
-                  ))}
-                </div>
-              )}
+          {/* --- GHOST SPEED: Responsive Sizing --- */}
+          {difficulty === "ghost" && (
+            <div className="mt-2 md:mt-4 pt-2 md:pt-4 border-t border-neutral-800 flex items-center justify-between px-1 md:px-2">
+              <span className="text-[9px] md:text-xs font-black text-neutral-400 uppercase tracking-widest">Ghost Speed</span>
+              <div className="flex items-center gap-1 md:gap-2 bg-black rounded-lg px-2 py-1">
+                <button onClick={() => { setDeathWPM(Math.max(50, deathWPM - 10)); resetGame(); }} className="text-white"><ChevronLeft className="w-4 h-4 md:w-5 md:h-5" strokeWidth={3} /></button>
+                <span className="text-xs md:text-base font-black text-yellow-500 italic tabular-nums w-8 md:w-12 text-center">{deathWPM}</span>
+                <button onClick={() => { setDeathWPM(Math.min(120, deathWPM + 10)); resetGame(); }} className="text-white"><ChevronRight className="w-4 h-4 md:w-5 md:h-5" strokeWidth={3} /></button>
+              </div>
             </div>
-          </>
-        )}
-      </div>
-
-      <div 
-        className={`overflow-hidden transition-all duration-700 ease-in-out ${
-          showSpeedSlider 
-            ? "max-w-[400px] opacity-100 translate-x-0" 
-            : "max-w-0 opacity-0 -translate-x-10"
-        }`}
-      >
-        <div className="flex items-center bg-neutral-800 p-1.5 rounded-xl shadow-lg w-max h-full">
-          <div className={labelClass}>
-            <Zap size={16} />
-            <span className="text-xs font-bold uppercase tracking-wider">
-              Speed
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-4 px-3">
-            <span className="text-[10px] font-mono text-neutral-500 w-4 text-right">50</span>
-            
-            <input
-              type="range"
-              min="50"
-              max="120"
-              step="5"
-              value={deathWPM}
-              onChange={(e) => {
-                setDeathWPM(Number(e.target.value));
-                resetGame();
-              }}
-              className="w-32 h-1.5 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-yellow-500 hover:accent-yellow-400 transition-all active:scale-105"
-            />
-            
-            <span className="text-[10px] font-mono text-neutral-500 w-4">120</span>
-            
-            <div className="flex items-center justify-center bg-neutral-900 rounded px-2 py-1 min-w-[50px] shadow-sm">
-                <span className="text-sm font-bold text-yellow-500 font-mono">
-                {deathWPM}
-                </span>
-                <span className="text-[10px] text-neutral-500 ml-1 mt-0.5">wpm</span>
-            </div>
-          </div>
+          )}
         </div>
-      </div>
-
+      )}
     </div>
   );
 };

@@ -46,7 +46,7 @@ const Timer = ({ totalSeconds }) => {
     return () => clearInterval(interval);
   }, [isRunning, setCountDown, countdown]);
 
-  // Logic to handle 3 digits (e.g., 100) vs 2 digits (e.g., 99)
+ 
   const hundreds = Math.floor(countdown / 100);
   const tens = Math.floor((countdown % 100) / 10);
   const units = countdown % 10;
@@ -54,7 +54,7 @@ const Timer = ({ totalSeconds }) => {
   return (
     <div className="relative inline-block">
       <div className="flex items-center justify-center gap-1 bg-neutral-800 text-yellow-500 text-4xl rounded-xl px-6 py-3 shadow-lg">
-        {/* Only show hundreds digit if it's greater than 0 */}
+     
         {hundreds > 0 && <ScrollDigit digit={hundreds} animate={isRunning} />}
         <ScrollDigit digit={tens} animate={isRunning} />
         <ScrollDigit digit={units} animate={isRunning} />
