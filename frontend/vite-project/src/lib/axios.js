@@ -1,6 +1,6 @@
 import axios from "axios";
 export const axiosInstance = axios.create({
-  baseURL: "http://localhost:5003/api",
+  baseURL: "https://swiftkeys.onrender.com/api",
   withCredentials: true
 });
 
