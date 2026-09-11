@@ -13,7 +13,7 @@ import cookieParser from "cookie-parser";
 import { protectRoute } from "./middlewares/auth.middleware.js";
 
 app.use(cors({
-  origin: ["http://localhost:5173",
+  origin: [
     "https://swift-keys-gray.vercel.app",
   ],//Vite frontend URL
   credentials: true,               // Allows cookies/headers to pass

@@ -1,9 +1,9 @@
-import {io} from "socket.io-client";
+import { io } from "socket.io-client";
 
-const socket=io("http://localhost:5003",
+const socket = io("https://swiftkeys.onrender.com",
     {
-        autoConnect:false
+        autoConnect: false
     }
 );
 
-export  default socket;
+export default socket;
