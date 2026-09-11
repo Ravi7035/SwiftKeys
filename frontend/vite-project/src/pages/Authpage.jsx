@@ -1,5 +1,5 @@
-import LoginForm from "../components/LoginForm";
-import RegisterForm from "../components/RegisterForm";
+import LoginForm from "../components/Loginform";
+import RegisterForm from "../components/Registerform";
 import userAuthStore from "../store/AuthenticationStore";
 import { useState } from "react";
 
@@ -15,7 +15,7 @@ const AuthPage = () => {
             {/* Left Side - Form Toggle */}
             <div className="flex flex-col items-center justify-center">
               {isRegister ? <RegisterForm /> : <LoginForm />}
-              
+
               {/* Toggle Link */}
               <div className="mt-6 text-center">
                 <p className="text-neutral-400 text-sm">
@@ -35,26 +35,26 @@ const AuthPage = () => {
               {/* Logo/Title Section */}
               <div className="text-center space-y-4">
                 <div className="flex items-center justify-center gap-3 mb-6">
-  
-                     <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="rela tive w-14 h-14 text-white transition-transform duration-300"
-    >
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="M8 12h.01" />
-      <path d="M12 12h.01" />
-      <path d="M16 12h.01" />
-      <path d="M7 16h10" />
-    </svg>
-                 
+
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="rela tive w-14 h-14 text-white transition-transform duration-300"
+                  >
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <path d="M8 12h.01" />
+                    <path d="M12 12h.01" />
+                    <path d="M16 12h.01" />
+                    <path d="M7 16h10" />
+                  </svg>
+
                 </div>
-                
+
                 <h1 className="text-5xl font-black text-white" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
                   Swift Keys
                 </h1>
